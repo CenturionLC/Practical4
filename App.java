@@ -546,7 +546,6 @@ public class App {
                 .append(database)
                 .toString();
         Connection connection = DriverManager.getConnection(url, username, password);
-        Statement statement = connection.createStatement();
 
         int storeID = 0, addressID = 0, act = 0;
         String first = "", last = "", email = "";
@@ -570,6 +569,8 @@ public class App {
                 custPrepared.setInt(6, act);
                 custPrepared.setString(7, time);
                 custPrepared.execute();
+            }catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(f, "Unable to insert into DB!", "Warning", JOptionPane.WARNING_MESSAGE);
             }
     }
 
@@ -605,7 +606,7 @@ public class App {
 
     public String getEmail(){
         String email = "";
-        String des = JOptionPane.showInputDialog(f, "Enter Email sName");
+        String des = JOptionPane.showInputDialog(f, "Enter Email");
         if(des.contains("@") && des.contains(".")){
             email = des;
         }
@@ -619,7 +620,7 @@ public class App {
 
     public int getAddressId(){
         int id = 0;
-        String des = JOptionPane.showInputDialog(f, "Enter Email sName");
+        String des = JOptionPane.showInputDialog(f, "Enter Address ID");
         if(des.length() > 3){
             JOptionPane.showMessageDialog(f, "This address ID is not valid", "Warning",
                     JOptionPane.WARNING_MESSAGE);
@@ -628,7 +629,7 @@ public class App {
         try {
             id = Integer.parseInt(des);
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(f, "This rental duration is not valid", "Warning",
+            JOptionPane.showMessageDialog(f, "This address ID is not valid", "Warning",
                     JOptionPane.WARNING_MESSAGE);
             getAddressId();
         }
@@ -638,7 +639,7 @@ public class App {
     
     public int getActive(){
         int act = 0;
-        String des = JOptionPane.showInputDialog(f, "Enter Email sName");
+        String des = JOptionPane.showInputDialog(f, "Enter Active Id");
         if(des.length() > 1){
             JOptionPane.showMessageDialog(f, "This ActiveId is not valid", "Warning",
                     JOptionPane.WARNING_MESSAGE);
@@ -647,7 +648,7 @@ public class App {
         try {
             act = Integer.parseInt(des);
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(f, "This rental duration is not valid", "Warning",
+            JOptionPane.showMessageDialog(f, "This ActiveId is not valid", "Warning",
                     JOptionPane.WARNING_MESSAGE);
             getActive();
         }
@@ -663,7 +664,42 @@ public class App {
                 .toString();
         Connection connection = DriverManager.getConnection(url, username, password);
         Statement statement = connection.createStatement();
-
+        String updateValString = "";
+        int updateValInt = 0; 
+        int clientID = Integer.parseInt(JOptionPane.showInputDialog(f, "Give Customer_id of Client you want to update"));
+        String[] options = {"StorId", "FirstName", "LastName", "Email", "AddressId", "Active"};
+        int response = JOptionPane.showOptionDialog(null, "Choose an Option", "Options", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+        if(response == 0){
+            updateValInt = getStoreID();
+            statement.executeQuery(
+                "UPDATE customer set store_id ="+"'"+updateValInt+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
+        }
+        if(response == 1){
+            updateValString = getFName();
+            statement.executeQuery(
+                "UPDATE customer set first_name ="+"'"+updateValString+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
+        }
+        if(response == 2){
+            updateValString = getLName();
+            statement.executeQuery(
+                "UPDATE customer set last_name ="+"'"+updateValString+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
+        }
+        if(response == 3){
+            updateValString = getEmail();
+            statement.executeQuery(
+                "UPDATE customer set email ="+"'"+updateValString+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
+        }
+        if(response == 4){
+            updateValInt = getAddressId();
+            statement.executeQuery(
+                "UPDATE customer set address_id ="+"'"+updateValInt+"'"+" WHERE (customer_id = "+"'"+clientID+"'"+")");
+        }
+        if(response == 5){
+            updateValInt = getActive();
+            statement.executeQuery(
+                "UPDATE customer set active ="+"'"+updateValInt+"'"+" WHERE (customer_id = "+"'"+clientID+"'"+")");
+        }
+        
 
     }
 
@@ -675,6 +711,42 @@ public class App {
                 .toString();
         Connection connection = DriverManager.getConnection(url, username, password);
         Statement statement = connection.createStatement();
+
+        String updateValString = "";
+        int updateValInt = 0; 
+        int clientID = Integer.parseInt(JOptionPane.showInputDialog(f, "Give Customer_id of Client you want to update"));
+        String[] options = {"StorId", "FirstName", "LastName", "Email", "AddressId", "Active"};
+        int response = JOptionPane.showOptionDialog(null, "Choose an Option", "Options", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+        if(response == 0){
+            updateValInt = getStoreID();
+            statement.executeQuery(
+                "UPDATE customer set store_id ="+"'"+updateValInt+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
+        }
+        if(response == 1){
+            updateValString = getFName();
+            statement.executeQuery(
+                "UPDATE customer set first_name ="+"'"+updateValString+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
+        }
+        if(response == 2){
+            updateValString = getLName();
+            statement.executeQuery(
+                "UPDATE customer set last_name ="+"'"+updateValString+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
+        }
+        if(response == 3){
+            updateValString = getEmail();
+            statement.executeQuery(
+                "UPDATE customer set email ="+"'"+updateValString+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
+        }
+        if(response == 4){
+            updateValInt = getAddressId();
+            statement.executeQuery(
+                "UPDATE customer set address_id ="+"'"+updateValInt+"'"+" WHERE (customer_id = "+"'"+clientID+"'"+")");
+        }
+        if(response == 5){
+            updateValInt = getActive();
+            statement.executeQuery(
+                "UPDATE customer set active ="+"'"+updateValInt+"'"+" WHERE (customer_id = "+"'"+clientID+"'"+")");
+        }
     }
 
     public void viewClient() throws SQLException {
