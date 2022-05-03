@@ -8,7 +8,7 @@ import java.awt.*;
 
 public class App {
     JFrame fra;
-
+    JTable staffTable; 
     App() throws SQLException {
         fra = new JFrame();
         JPanel p1 = new JPanel();
@@ -25,7 +25,8 @@ public class App {
         fra.setSize(1000, 1000);
         fra.setLayout(null);
         fra.setVisible(true);
-        JScrollPane info = new JScrollPane(staffPanel());
+        staffTable = staffPanel();
+        JScrollPane info = new JScrollPane(staffTable);
         p1.add(info);
         p1.revalidate();
         p1.repaint();
@@ -38,16 +39,9 @@ public class App {
         p1.add(Filmb);
         p1.revalidate();
         p1.repaint();
-        //java -cp target/prac04-1.0-SNAPSHOT.jar za.ac.up.cs.cos221.App
-        DefaultTableModel staff_table = new DefaultTableModel();
-        String rows[] = { "First", "Last", "Address", "Address2", "District", "City", "Postal", "Phone", "Store",
-                "Active" };
-        staff_table.setColumnIdentifiers(rows);
-        JTable staffTable = new JTable();
-        staffTable.setModel(staff_table);
+
         TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(staffTable.getModel());
         staffTable.setRowSorter(sorter);
-
 
         Filmb.addActionListener(a -> {
             String text = filterFilm.getText();
@@ -56,6 +50,7 @@ public class App {
             }
             else{
                 sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text));
+                
             }
         });
         
@@ -63,10 +58,10 @@ public class App {
     
     private static String driver = "jdbc:mariadb";
     private static String host = "localhost";
-    private static int port = 1200;
-    private static String database = "u21729752_sakila";
+    private static int port = 3307;
+    private static String database = "u21489549_sakila";
     private static String username = "root";
-    private static String password = "Guderian";
+    private static String password = "Blackcat";
 
     public JTable staffPanel() throws SQLException {
         int rows = 0;
@@ -83,7 +78,7 @@ public class App {
                     + host + ":" + port + " successfully established");
         }*/
 
-       // java -cp prac04.jar com.mycompany.app.App
+        
         ResultSet result = statement.executeQuery(
                 "SELECT * FROM staff");
         while(result.next()){
