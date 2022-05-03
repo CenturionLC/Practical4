@@ -3,7 +3,10 @@ package za.ac.up.cs.cos221;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.awt.*;
+import java.util.Date;
 
 public class App {
     JFrame fra, f;
@@ -14,7 +17,7 @@ public class App {
     private static String database = System.getenv("SAKILA_DB_NAME");
     private static String username = System.getenv("SAKILA_DB_USERNAME");
     private static String password = System.getenv("SAKILA_DB_PASSWORD");
-    
+
     App() throws SQLException {
         fra = new JFrame();
         JPanel p1 = new JPanel();
@@ -54,15 +57,15 @@ public class App {
 
         JButton ClAddb = new JButton("Add Client");
         JButton ClUp = new JButton("Update Client");
-        JButton ClDelmb = new JButton("Delete Client");
-        JButton Clvimb = new JButton("View Clients");
-        
+        JButton ClDeleb = new JButton("Delete Client");
+        JButton Clviewb = new JButton("View Clients");
+
         p4.add(ClAddb);
         p4.add(ClUp);
-        p4.add(ClDelmb);
-        p4.add(Clvimb);
-
-
+        p4.add(ClDeleb);
+        p4.add(Clviewb);
+        p4.revalidate();
+        p4.repaint();
 
         TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(staffTable.getModel());
         staffTable.setRowSorter(sorter);
@@ -87,6 +90,38 @@ public class App {
             }
         });
 
+        ClAddb.addActionListener(a -> {
+            try {
+                addClient();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+
+        ClUp.addActionListener(a -> {
+            try {
+                updateClient();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+
+        ClDeleb.addActionListener(a -> {
+            try {
+                deleteClient();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+
+        Clviewb.addActionListener(a -> {
+            try {
+                viewClient();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+
     }
 
     /*
@@ -97,8 +132,6 @@ public class App {
      * private static String username = "root";
      * private static String password = "Blackcat";
      */
-
-    
 
     public JTable staffPanel() throws SQLException {
         int rows = 0;
@@ -156,8 +189,6 @@ public class App {
         Connection connection = DriverManager.getConnection(url, username, password);
         Statement statement = connection.createStatement();
 
-        
-
         ResultSet result = statement.executeQuery(
                 "SELECT * FROM film");
         while (result.next()) {
@@ -185,7 +216,7 @@ public class App {
         return filmTable;
     }
 
-    public JTable inventoryPanel() throws SQLException{
+    public JTable inventoryPanel() throws SQLException {
         String url = new StringBuilder()
                 .append(driver).append("://")
                 .append(host).append(":").append(port).append("/")
@@ -204,9 +235,9 @@ public class App {
                     + host + ":" + port + " successfully established");
         }
         String sql = "SELECT CONCAT(ci.city,',',co.country) as Store, c.name genre, COUNT(i.store_id) as appear FROM category c INNER JOIN film_category fc ON c.category_id = fc.category_id INNER JOIN film fa ON fc.film_id = fa.film_id INNER JOIN inventory i ON i.film_id = fa.film_id INNER JOIN store s ON i.store_id = s.store_id INNER JOIN address a ON s.address_id = a.address_id INNER JOIN city ci ON a.city_id = ci.city_id INNER JOIN country co ON ci.country_id = co.country_id GROUP BY i.store_id, c.name ORDER By i.store_id";
-        
+
         ResultSet result1 = statement.executeQuery(sql);
-                    
+
         String[][] in = new String[32][3];
         int i = 0;
         while (result1.next()) {
@@ -215,7 +246,7 @@ public class App {
             in[i][2] = result1.getString("appear");
             i++;
         }
-        String coloumNames[] = {"Store" , "Genre", "Amounts"};
+        String coloumNames[] = { "Store", "Genre", "Amounts" };
 
         JTable InTable = new JTable(in, coloumNames);
         return InTable;
@@ -508,9 +539,154 @@ public class App {
         return len;
     }
 
+    public void addClient() throws SQLException {
+        String url = new StringBuilder()
+                .append(driver).append("://")
+                .append(host).append(":").append(port).append("/")
+                .append(database)
+                .toString();
+        Connection connection = DriverManager.getConnection(url, username, password);
+        Statement statement = connection.createStatement();
+
+        int storeID = 0, addressID = 0, act = 0;
+        String first = "", last = "", email = "";
+        
+
+        storeID = getStoreID();
+        first = getFName();
+        last = getLName();
+        email = getEmail();
+        addressID = getAddressId();
+        act = getActive();
+        String time = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+        
+        try (PreparedStatement custPrepared = connection.prepareStatement(
+            "INSERT INTO customer (store_id, first_name, last_name, email, address_id, active, create_date) VALUES (?,?,?,?,?,?,?)")){
+                custPrepared.setInt(1, storeID);
+                custPrepared.setString(2, first);
+                custPrepared.setString(3, last);
+                custPrepared.setString(4, email);
+                custPrepared.setInt(5, addressID);
+                custPrepared.setInt(6, act);
+                custPrepared.setString(7, time);
+                custPrepared.execute();
+            }
+    }
+
+    public int getStoreID(){
+        int id = Integer.parseInt(JOptionPane.showInputDialog(f, "Enter Store ID"));
+        if(id != 1 || id != 2){
+            JOptionPane.showMessageDialog(f, "This Store ID is not valid", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            getStoreID();
+        }
+        return id;
+    }
+
+    public String getFName(){
+        String des = JOptionPane.showInputDialog(f, "Enter First Name");
+        if(des.isEmpty()){
+            JOptionPane.showMessageDialog(f, "This Name is not valid", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            getFName();
+        }
+        return des;
+    }
+
+    public String getLName(){
+        String des = JOptionPane.showInputDialog(f, "Enter Last Name");
+        if(des.isEmpty()){
+            JOptionPane.showMessageDialog(f, "This Name is not valid", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            getFName();
+        }
+        return des;
+    }
+
+    public String getEmail(){
+        String email = "";
+        String des = JOptionPane.showInputDialog(f, "Enter Email sName");
+        if(des.contains("@") && des.contains(".")){
+            email = des;
+        }
+        else{
+            JOptionPane.showMessageDialog(f, "This Email is not valid", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            getEmail();
+        }
+        return email;
+    }
+
+    public int getAddressId(){
+        int id = 0;
+        String des = JOptionPane.showInputDialog(f, "Enter Email sName");
+        if(des.length() > 3){
+            JOptionPane.showMessageDialog(f, "This address ID is not valid", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            getAddressId();
+        }
+        try {
+            id = Integer.parseInt(des);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(f, "This rental duration is not valid", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            getAddressId();
+        }
+
+        return id; 
+    }
     
+    public int getActive(){
+        int act = 0;
+        String des = JOptionPane.showInputDialog(f, "Enter Email sName");
+        if(des.length() > 1){
+            JOptionPane.showMessageDialog(f, "This ActiveId is not valid", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            getActive();
+        }
+        try {
+            act = Integer.parseInt(des);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(f, "This rental duration is not valid", "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+            getActive();
+        }
+
+        return act;
+    }
     
-    
+    public void updateClient() throws SQLException {
+        String url = new StringBuilder()
+                .append(driver).append("://")
+                .append(host).append(":").append(port).append("/")
+                .append(database)
+                .toString();
+        Connection connection = DriverManager.getConnection(url, username, password);
+        Statement statement = connection.createStatement();
+
+
+    }
+
+    public void deleteClient() throws SQLException {
+        String url = new StringBuilder()
+                .append(driver).append("://")
+                .append(host).append(":").append(port).append("/")
+                .append(database)
+                .toString();
+        Connection connection = DriverManager.getConnection(url, username, password);
+        Statement statement = connection.createStatement();
+    }
+
+    public void viewClient() throws SQLException {
+        String url = new StringBuilder()
+                .append(driver).append("://")
+                .append(host).append(":").append(port).append("/")
+                .append(database)
+                .toString();
+        Connection connection = DriverManager.getConnection(url, username, password);
+        Statement statement = connection.createStatement();
+    }
+
     public static void main(String[] args) throws SQLException {
         new App();
     }
