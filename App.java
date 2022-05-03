@@ -64,16 +64,17 @@ public class App {
                 e.printStackTrace();
             }
         });
-        
 
     }
 
-    /*private static String driver = "jdbc:mariadb";
-    private static String host = "localhost";
-    private static int port = 3307;
-    private static String database = "u21489549_sakila";
-    private static String username = "root";
-    private static String password = "Blackcat";*/
+    /*
+     * private static String driver = "jdbc:mariadb";
+     * private static String host = "localhost";
+     * private static int port = 3307;
+     * private static String database = "u21489549_sakila";
+     * private static String username = "root";
+     * private static String password = "Blackcat";
+     */
 
     private static String driver = System.getenv("SAKILA_DB_PROTO");
     private static String host = System.getenv("SAKILA_DB_HOST");
@@ -171,56 +172,158 @@ public class App {
     }
 
     public void addFilm() throws SQLException {
-            String url = new StringBuilder()
-                    .append(driver).append("://")
-                    .append(host).append(":").append(port).append("/")
-                    .append(database)
-                    .toString();
-            Connection connection = DriverManager.getConnection(url, username, password);
+        String url = new StringBuilder()
+                .append(driver).append("://")
+                .append(host).append(":").append(port).append("/")
+                .append(database)
+                .toString();
+        Connection connection = DriverManager.getConnection(url, username, password);
+
+        String title = "", des = "", rDur, len, rC = "", rating = "", speF = "";
+        int rYearInt = 0, lanIdInt = 0, orgLanIdInt = 0, rDurInt = 0;
+        double rRateDub = 0, lenDub = 0, rCostDub = 0;
+        boolean pass = true;
+        JOptionPane.showMessageDialog(f, "Enter Information for the database");
+        title = getTitle();
+        des = getDescription();
         
-            /*try (ResultSet result = statement.executeQuery("SELECT 1")) {
-                System.out.println("Connection to database " + database + " on host "
-                        + host + ":" + port + " successfully established");
-            }*/
+        rYearInt = getRYear();
+        lanIdInt = getLanguageid();
+        orgLanIdInt = getOriginalLanguage();
+        rDurInt = getRentalDuration();
 
-            f =new JFrame(); 
-            JOptionPane.showMessageDialog(f, "Enter each bit of data one at a time, press ok after each entry!");
-            String title = JOptionPane.showInputDialog(f, "Enter Title");
-            String Des = JOptionPane.showInputDialog(f, "Enter Description");
-            int rYear = Integer.parseInt(JOptionPane.showInputDialog(f, "Enter Release year"));
-            int lanId = Integer.parseInt(JOptionPane.showInputDialog(f, "Enter Language id"));
-            int orgLanId = Integer.parseInt(JOptionPane.showInputDialog(f, "Enter Original Language ID"));
-            int rDur = Integer.parseInt(JOptionPane.showInputDialog(f, "Enter Rental Duration"));
-            double rRate = Double.parseDouble(JOptionPane.showInputDialog(f, "Enter Rental Rate"));
-            int len = Integer.parseInt(JOptionPane.showInputDialog(f, "Enter Length"));
-            double rCost = Double.parseDouble(JOptionPane.showInputDialog(f, "Enter Replacement Cost"));
-            String rating = JOptionPane.showInputDialog(f, "Enter Rating");
-            String speF = JOptionPane.showInputDialog(f, "Enter Special features");
+        try (PreparedStatement filmPrepared = connection.prepareStatement(
+                "INSERT INTO film (title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            filmPrepared.setString(1, title);
+            filmPrepared.setString(2, des);
+            filmPrepared.setInt(3, rYearInt);
+            filmPrepared.setInt(4, lanIdInt);
+            filmPrepared.setInt(5, orgLanIdInt);
+            filmPrepared.setInt(6, rDurInt);
+            filmPrepared.setDouble(7, rRateDub);
+            filmPrepared.setDouble(8, lenDub);
+            filmPrepared.setDouble(9, rCostDub);
+            filmPrepared.setString(10, rating);
+            filmPrepared.setString(11, speF);
 
-            try(PreparedStatement filmPrepared = connection.prepareStatement("INSERT INTO film (title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")){
-                filmPrepared.setString(1, title);
-                filmPrepared.setString(2, Des);
-                filmPrepared.setInt(3, rYear);
-                filmPrepared.setInt(4, lanId);
-                if(orgLanId == 0){
-                    filmPrepared.setNull(5, orgLanId);
-                }
-                else{
-                    filmPrepared.setInt(5, orgLanId);
-                }
-                filmPrepared.setInt(6, rDur);
-                filmPrepared.setDouble(7, rRate);
-                filmPrepared.setDouble(8, len);
-                filmPrepared.setDouble(9, rCost);
-                filmPrepared.setString(10, rating);
-                filmPrepared.setString(11, speF);
+            filmPrepared.execute();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(f, "Unable to insert into DB!", "Warning", JOptionPane.WARNING_MESSAGE);
+        }
+    }
 
-                filmPrepared.execute();
-            }
+    public String getTitle() {
+        String title = JOptionPane.showInputDialog(f, "Enter Title");
+        if(title.isEmpty()){
+            JOptionPane.showMessageDialog(f, "This title is not valid", "Warning",
+            JOptionPane.WARNING_MESSAGE);
+            getTitle();
+        }
+        return title;
+    }
+
+    public String getDescription() {
+
+        String Des = JOptionPane.showInputDialog(f, "Enter Description");
+        return Des;
+    }
+
+    public int getRYear() {
+        int rYearInt = 0;
+        String rYear = JOptionPane.showInputDialog(f, "Enter Release year");
+        if(rYear.length() != 4){
+            JOptionPane.showMessageDialog(f, "This year is not valid", "Warning",
+            JOptionPane.WARNING_MESSAGE);
+            getRYear();
+        }
+        try{
+            rYearInt = Integer.parseInt(rYear);
+        }catch(NumberFormatException e){
+            JOptionPane.showMessageDialog(f, "This year is not valid", "Warning",
+            JOptionPane.WARNING_MESSAGE);
+            getRYear();
+        }
+        return rYearInt;
+    }
+
+    public int getLanguageid(){
+        int lanInt = 0;
+        String lan = JOptionPane.showInputDialog(f, "Enter language id");
+        if(lan.length() != 1){
+            JOptionPane.showMessageDialog(f, "This language ID is not valid", "Warning",
+            JOptionPane.WARNING_MESSAGE);
+            getLanguageid();
+        }
+        try{
+            lanInt = Integer.parseInt(lan);
+        }catch(NumberFormatException e){
+            JOptionPane.showMessageDialog(f, "This language ID is not valid", "Warning",
+            JOptionPane.WARNING_MESSAGE);
+            getLanguageid();
+        }
+        return lanInt;
+    }
+
+    public int getOriginalLanguage() {
+        int lanInt = 0;
+        String lan = JOptionPane.showInputDialog(f, "Enter Orginal language id");
+        if(lan.isEmpty()){
+            return 0;
+        }
+        if(lan.length() != 1){
+            JOptionPane.showMessageDialog(f, "This language ID is not valid", "Warning",
+            JOptionPane.WARNING_MESSAGE);
+            getLanguageid();
+        }
+        try{
+            lanInt = Integer.parseInt(lan);
+        }catch(NumberFormatException e){
+            JOptionPane.showMessageDialog(f, "This language ID is not valid", "Warning",
+            JOptionPane.WARNING_MESSAGE);
+            getLanguageid();
+        }
+        return lanInt;
+    }
+
+    public int getRentalDuration() {
+        int rentDInt = 0;
+        String des = JOptionPane.showInputDialog(f, "Enter rental duration");
+        try{
+            rentDInt = Integer.parseInt(des);
+        }catch(NumberFormatException e){
+            JOptionPane.showMessageDialog(f, "This rental duration is not valid", "Warning",
+            JOptionPane.WARNING_MESSAGE);
+            getRentalDuration();
+        }
+        return rentDInt;
+    }
+
+    public String getRentalRate() {
+        String Des = JOptionPane.showInputDialog(f, "Enter rental rate");
+        return Des;
+    }
+
+    public String getLength() {
+        String Des = JOptionPane.showInputDialog(f, "Enter length of film");
+        return Des;
+    }
+
+    public String getReplacement() {
+        String Des = JOptionPane.showInputDialog(f, "Enter cost of replacement");
+        return Des;
+    }
+
+    public String getRating() {
+        String Des = JOptionPane.showInputDialog(f, "Enter rating of film");
+        return Des;
+    }
+
+    public String getSpecialFeatures() {
+        String Des = JOptionPane.showInputDialog(f, "Enter special features of film");
+        return Des;
     }
 
     public static void main(String[] args) throws SQLException {
-
         new App();
     }
 }
