@@ -116,7 +116,11 @@ public class App {
 
         Clviewb.addActionListener(a -> {
             try {
-                viewClient();
+                JScrollPane info4 = new JScrollPane(viewClient());
+                p4.add(info4);
+                p4.revalidate();
+                p4.repaint();
+
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -172,7 +176,7 @@ public class App {
             staff[i][9] = result2.getString("active");
             i++;
         }
-        String coloumNames[] = { "First", "Last", "Address", "Address2", "District", "City", "Postal", "Phone", "Store",
+        String coloumNames[] = { "First", "Last", "Address", "Address2", "District", "City", "Postal", "Phone", "Store_Id",
                 "Active" };
 
         JTable staffTable = new JTable(staff, coloumNames);
@@ -254,67 +258,66 @@ public class App {
     }
 
     public void addFilm() throws SQLException {
-        String url = new StringBuilder()
-                .append(driver).append("://")
-                .append(host).append(":").append(port).append("/")
-                .append(database)
-                .toString();
-        Connection connection = DriverManager.getConnection(url, username, password);
-        Statement statement = connection.createStatement();
-        int rows = 0;
-        String title = "", des = "", rC = "", rating = "", speF = "";
-        int rYear = 0, lanId = 0, orgLanId = 0, rDur = 0, len = 0, catId = 0;
-        double rRate = 0, rCost = 0;
-        JOptionPane.showMessageDialog(f, "Enter Information for the database");
-        title = getTitle();
-        des = getDescription();
+		String url = new StringBuilder()
+				.append(driver).append("://")
+				.append(host).append(":").append(port).append("/")
+				.append(database)
+				.toString();
+		Connection connection = DriverManager.getConnection(url, username, password);
+		
+		int rows = 0;
+		String title = "", des = "", rC = "", rating = "", speF = "";
+		int rYear = 0, lanId = 0, orgLanId = 0, rDur = 0, len = 0, catId = 0;
+		double rRate = 0, rCost = 0;
+		JOptionPane.showMessageDialog(f, "Enter Information for the database");
+		title = getTitle();
+		des = getDescription();
 
-        rYear = getRYear();
-        lanId = getLanguageid();
-        orgLanId = getOriginalLanguage();
-        rDur = getRentalDuration();
-        rRate = getRentalRate();
-        len = getLength();
-        rCost = getReplacement();
-        rating = getRating();
-        speF = getSpecialFeatures();
-        catId = getCatID();
+		rYear = getRYear();
+		lanId = getLanguageid();
+		orgLanId = getOriginalLanguage();
+		rDur = getRentalDuration();
+		rRate = getRentalRate();
+		len = getLength();
+		rCost = getReplacement();
+		rating = getRating();
+		speF = getSpecialFeatures();
+		catId = getCatID();
 
-        try (PreparedStatement filmPrepared = connection.prepareStatement(
-                "INSERT INTO film (title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-            filmPrepared.setString(1, title);
-            filmPrepared.setString(2, des);
-            filmPrepared.setInt(3, rYear);
-            filmPrepared.setInt(4, lanId);
-            if (orgLanId == 100) {
-                filmPrepared.setNull(5, Types.TINYINT);
-            } else {
-                filmPrepared.setInt(5, orgLanId);
-            }
-            filmPrepared.setInt(6, rDur);
-            filmPrepared.setDouble(7, rRate);
-            filmPrepared.setInt(8, len);
-            filmPrepared.setDouble(9, rCost);
-            filmPrepared.setString(10, rating);
-            filmPrepared.setString(11, speF);
-            filmPrepared.execute();
+		try (PreparedStatement filmPrepared = connection.prepareStatement(
+				"INSERT INTO film (title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+				Statement.RETURN_GENERATED_KEYS)) {
+			filmPrepared.setString(1, title);
+			filmPrepared.setString(2, des);
+			filmPrepared.setInt(3, rYear);
+			filmPrepared.setInt(4, lanId);
+			if (orgLanId == 100) {
+				filmPrepared.setNull(5, Types.TINYINT);
+			} else {
+				filmPrepared.setInt(5, orgLanId);
+			}
+			filmPrepared.setInt(6, rDur);
+			filmPrepared.setDouble(7, rRate);
+			filmPrepared.setInt(8, len);
+			filmPrepared.setDouble(9, rCost);
+			filmPrepared.setString(10, rating);
+			filmPrepared.setString(11, speF);
+			filmPrepared.execute();
 
-            ResultSet result = statement.executeQuery(
-                    "SELECT * FROM film");
-            while (result.next()) {
-                rows++;
-            }
-            String sql = "INSERT INTO film_category (film_id, category_id) VALUES (?, ?)";
+			ResultSet result = filmPrepared.getGeneratedKeys();
+			result.first();
+			int filID = result.getInt(1);
+			String sql = "INSERT INTO film_category (film_id, category_id) VALUES (?, ?)";
 
-            try (PreparedStatement stmt2 = connection.prepareStatement(sql)) {
-                stmt2.setInt(1, rows);
-                stmt2.setInt(2, catId);
-                stmt2.execute();
-            }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(f, "Unable to insert into DB!", "Warning", JOptionPane.WARNING_MESSAGE);
-        }
-    }
+			try (PreparedStatement stmt2 = connection.prepareStatement(sql)) {
+				stmt2.setInt(1, filID);
+				stmt2.setInt(2, catId);
+				stmt2.execute();
+			}
+		} catch (NumberFormatException e) {
+			JOptionPane.showMessageDialog(f, "Unable to insert into DB!", "Warning", JOptionPane.WARNING_MESSAGE);
+		}
+	}
 
     public String getTitle() {
         String title = JOptionPane.showInputDialog(f, "Enter Title");
@@ -575,13 +578,17 @@ public class App {
     }
 
     public int getStoreID(){
+        int idTwo = 0;
         int id = Integer.parseInt(JOptionPane.showInputDialog(f, "Enter Store ID"));
-        if(id != 1 || id != 2){
+        if(id == 1 || id == 2){
+            idTwo = id;
+        }
+        else{
             JOptionPane.showMessageDialog(f, "This Store ID is not valid", "Warning",
                     JOptionPane.WARNING_MESSAGE);
             getStoreID();
         }
-        return id;
+        return idTwo;
     }
 
     public String getFName(){
@@ -712,44 +719,24 @@ public class App {
         Connection connection = DriverManager.getConnection(url, username, password);
         Statement statement = connection.createStatement();
 
-        String updateValString = "";
-        int updateValInt = 0; 
         int clientID = Integer.parseInt(JOptionPane.showInputDialog(f, "Give Customer_id of Client you want to update"));
-        String[] options = {"StorId", "FirstName", "LastName", "Email", "AddressId", "Active"};
-        int response = JOptionPane.showOptionDialog(null, "Choose an Option", "Options", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
-        if(response == 0){
-            updateValInt = getStoreID();
-            statement.executeQuery(
-                "UPDATE customer set store_id ="+"'"+updateValInt+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
-        }
-        if(response == 1){
-            updateValString = getFName();
-            statement.executeQuery(
-                "UPDATE customer set first_name ="+"'"+updateValString+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
-        }
-        if(response == 2){
-            updateValString = getLName();
-            statement.executeQuery(
-                "UPDATE customer set last_name ="+"'"+updateValString+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
-        }
-        if(response == 3){
-            updateValString = getEmail();
-            statement.executeQuery(
-                "UPDATE customer set email ="+"'"+updateValString+"'"+" WHERE (customer_id ="+"'"+clientID+"'"+")");
-        }
-        if(response == 4){
-            updateValInt = getAddressId();
-            statement.executeQuery(
-                "UPDATE customer set address_id ="+"'"+updateValInt+"'"+" WHERE (customer_id = "+"'"+clientID+"'"+")");
-        }
-        if(response == 5){
-            updateValInt = getActive();
-            statement.executeQuery(
-                "UPDATE customer set active ="+"'"+updateValInt+"'"+" WHERE (customer_id = "+"'"+clientID+"'"+")");
-        }
+            ResultSet result = statement.executeQuery("SELECT address_id FROM customer WHERE (customer_id="+"'"+clientID+"'"+")");
+            ResultSet result2 = statement.executeQuery("SELECT city_id FROM address WHERE (address_id="+"'"+result+"'"+")");
+            ResultSet result3 = statement.executeQuery("SELECT country_id FROM city WHERE (city_id="+"'"+result2+"'"+")");
+            statement.executeQuery("DELETE FROM payment WHERE (customer_id="+"'"+clientID+"'"+")");
+            statement.executeQuery("DELETE FROM rental WHERE (customer_id="+"'"+clientID+"'"+")");
+            statement.executeQuery("DELETE FROM country WHERE (country_id="+"'"+result3+"'"+")");
+            statement.executeQuery("DELETE FROM city WHERE (city_id="+"'"+result2+"'"+")");
+            
+            ResultSet result5 = statement.executeQuery("SELECT store_id FROM customer WHERE (customer_id="+"'"+clientID+"'"+")");
+            statement.executeQuery("DELETE FROM staff WHERE (store_id="+"'"+result5+"'"+")");
+            statement.executeQuery("DELETE FROM store WHERE (store_id="+"'"+result5+"'"+")");
+            statement.executeQuery("DELETE FROM address WHERE (city_id="+"'"+result+"'"+")");
+            statement.executeQuery("DELETE FROM customer WHERE (customer_id="+"'"+clientID+"'"+")");
     }
 
-    public void viewClient() throws SQLException {
+    public JTable viewClient() throws SQLException {
+        int rows = 0;
         String url = new StringBuilder()
                 .append(driver).append("://")
                 .append(host).append(":").append(port).append("/")
@@ -757,6 +744,32 @@ public class App {
                 .toString();
         Connection connection = DriverManager.getConnection(url, username, password);
         Statement statement = connection.createStatement();
+
+        ResultSet result = statement.executeQuery(
+                "SELECT * FROM customer");
+        while (result.next()) {
+            rows++;
+        }
+        ResultSet result2 = statement.executeQuery(
+                "SELECT * FROM customer");
+        String[][] cust = new String[rows][9];
+        int i = 0;
+        while (result2.next()) {
+            cust[i][0] = result2.getString("customer_id");
+            cust[i][1] = result2.getString("store_id");
+            cust[i][2] = result2.getString("first_name");
+            cust[i][3] = result2.getString("last_name");
+            cust[i][4] = result2.getString("email");
+            cust[i][5] = result2.getString("address_id");
+            cust[i][6] = result2.getString("active");
+            cust[i][7] = result2.getString("create_date");
+            cust[i][8] = result2.getString("last_update");
+            i++;
+        }
+        String coloumNames[] = {"Customer ID", "Store ID", "First Name", "Last Name", "Email", "Address ID", "Active", "Created", "Updated"};
+
+        JTable custTable = new JTable(cust, coloumNames);
+        return custTable;
     }
 
     public static void main(String[] args) throws SQLException {
