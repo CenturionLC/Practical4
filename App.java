@@ -4,7 +4,6 @@ import javax.swing.*;
 import javax.swing.table.*;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.awt.*;
 import java.util.Date;
 
@@ -40,6 +39,7 @@ public class App {
         p1.revalidate();
         p1.repaint();
         JScrollPane info2 = new JScrollPane(filmPanel());
+        info2.setPreferredSize(new Dimension(500, 500));
         p2.add(info2);
         JTextField filterStaff = new JTextField();
         filterStaff.setPreferredSize(new Dimension(100, 30));
@@ -194,13 +194,13 @@ public class App {
         Statement statement = connection.createStatement();
 
         ResultSet result = statement.executeQuery(
-                "SELECT * FROM film");
+            "SELECT * FROM film");
         while (result.next()) {
             rows++;
         }
         ResultSet result2 = statement.executeQuery(
-                "SELECT * FROM film INNER JOIN film_category ON film.film_id = film_category.film_id INNER JOIN category ON film_category.category_id = category.category_id");
-        String[][] film = new String[rows][8];
+            "SELECT * FROM film INNER JOIN film_category ON film.film_id = film_category.film_id INNER JOIN category ON film_category.category_id = category.category_id Order BY title");
+        String[][] film = new String[rows][7];
         int i = 0;
         while (result2.next()) {
             film[i][0] = result2.getString("title");
@@ -210,11 +210,9 @@ public class App {
             film[i][4] = result2.getString("rental_rate");
             film[i][5] = result2.getString("replacement_cost");
             film[i][6] = result2.getString("rating");
-            film[i][7] = result2.getString("category_id");
             i++;
         }
-        String coloumNames[] = { "Title", "Released", "Category", "Rent time", "Rent cost", "Lost cost", "rating",
-                "category" };
+        String coloumNames[] = { "Title", "Released", "Category", "Rent time", "Rent cost", "Lost cost", "rating"};
 
         JTable filmTable = new JTable(film, coloumNames);
         return filmTable;
@@ -264,7 +262,8 @@ public class App {
 				.append(database)
 				.toString();
 		Connection connection = DriverManager.getConnection(url, username, password);
-		
+        Statement statement = connection.createStatement();
+
 		int rows = 0;
 		String title = "", des = "", rC = "", rating = "", speF = "";
 		int rYear = 0, lanId = 0, orgLanId = 0, rDur = 0, len = 0, catId = 0;
@@ -284,6 +283,8 @@ public class App {
 		speF = getSpecialFeatures();
 		catId = getCatID();
 
+
+        
 		try (PreparedStatement filmPrepared = connection.prepareStatement(
 				"INSERT INTO film (title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
 				Statement.RETURN_GENERATED_KEYS)) {
@@ -304,16 +305,13 @@ public class App {
 			filmPrepared.setString(11, speF);
 			filmPrepared.execute();
 
-			ResultSet result = filmPrepared.getGeneratedKeys();
+            ResultSet result = filmPrepared.getGeneratedKeys();
 			result.first();
 			int filID = result.getInt(1);
-			String sql = "INSERT INTO film_category (film_id, category_id) VALUES (?, ?)";
-
-			try (PreparedStatement stmt2 = connection.prepareStatement(sql)) {
-				stmt2.setInt(1, filID);
-				stmt2.setInt(2, catId);
-				stmt2.execute();
-			}
+			
+            statement.executeQuery(
+                    "INSERT INTO film_category (film_id, category_id) VALUES ("+"'"+filID+"'"+","+"'"+catId+"'"+")");
+			
 		} catch (NumberFormatException e) {
 			JOptionPane.showMessageDialog(f, "Unable to insert into DB!", "Warning", JOptionPane.WARNING_MESSAGE);
 		}
